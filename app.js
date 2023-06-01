@@ -26,14 +26,6 @@ const dbExists = fs.existsSync(moviesDbFile);
 const sqlite = sqlite3.verbose();
 const db = new sqlite.Database(moviesDbFile);
 
-db.serialize(() => {
-  if (dbExists) {
-    db.each("select * from movies", (err, row) => {
-      // console.log(JSON.stringify(row));
-    });
-  }
-});
-
 // Parse request body and verifies incoming requests using discord-interactions package
 app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }));
 
@@ -76,13 +68,13 @@ app.post("/interactions", async function (req, res) {
 
     if (name === "add") {
       // Extract title from request.  Only one is given but the body is an array.
-      const movieAdded = data.options.map((option) => option.value).join();
+      const movieAdded = data.options
+        .map((option) => option.value)
+        .join()
+        .trim();
 
       // format movie title to have upper case first letters
-      const formattedMovieTitle = movieAdded
-        .split(" ")
-        .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-        .join(" ");
+      const formattedMovieTitle = getFormattedMovieTitle(movieAdded);
       const addStatus = await addMovieToList(formattedMovieTitle);
       let response = "";
 
@@ -102,7 +94,11 @@ app.post("/interactions", async function (req, res) {
         },
       });
     } else if (name === "list") {
-      const response = await getMoviesResponse();
+      let response = await getMoviesResponse();
+
+      if (response === "") {
+        response = "There are no movies in the movie list.";
+      }
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -111,21 +107,46 @@ app.post("/interactions", async function (req, res) {
       });
     } else if (name === "remove") {
       // Extract title from request.  Only one is given but the body is an array.
-      const movieAdded = data.options.map((option) => option.value).join();
-
-      // format movie title to have upper case first letters
-      const formattedMovieTitle = movieAdded
-        .split(" ")
-        .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-        .join(" ");
-      const movieRemoved = await removeMovie(movieAdded);
-
+      const movieAdded = data.options
+        .map((option) => option.value)
+        .join()
+        .trim();
       let response = "";
-      if (movieRemoved) {
-        response = `${formattedMovieTitle} was removed from the movie list.`;
+      const movies = await getMovies();
+      const movieExists = movies.some(
+        (movie) => movie.toLowerCase() === movieAdded.toLowerCase()
+      );
+
+      if (!movieExists) {
+        response = "This movie is not in the list.";
       } else {
-        response = `${formattedMovieTitle} was not removed from the movie list.`;
+        // format movie title to have upper case first letters
+        const formattedMovieTitle = getFormattedMovieTitle(movieAdded);
+        const movieRemoved = await removeMovie(movieAdded);
+
+        if (movieRemoved) {
+          response = `${formattedMovieTitle} was removed from the movie list.`;
+        } else {
+          response = `${formattedMovieTitle} was not removed from the movie list.`;
+        }
       }
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: response,
+        },
+      });
+    } else if (name === "watched") {
+      // Extract title from request.  Only one is given but the body is an array.
+      let movieAdded = "";
+      if (data.options && data.options.length > 0) {
+        movieAdded = data.options
+          .map((option) => option.value)
+          .join()
+          .trim();
+      }
+      const formatted = getFormattedMovieTitle(movieAdded);
+      const response = await watched(formatted);
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -149,15 +170,15 @@ async function addMovieToList(movieAdded) {
 
     if (movieExists) {
       resolve("exists");
+    } else {
+      db.run("insert into movies (title) values (?)", [movieAdded], (err) => {
+        if (err) {
+          console.log("Failed to insert movie.  Error: ", err.message);
+        } else {
+          resolve();
+        }
+      });
     }
-
-    db.run("insert into movies (title) values (?)", [movieAdded], (err) => {
-      if (err) {
-        console.log("Failed to insert movie.  Error: ", err.message);
-      } else {
-        resolve();
-      }
-    });
   });
 }
 
@@ -176,7 +197,6 @@ async function getMovies() {
     let movies = [];
 
     db.all("select * from movies", (err, rows) => {
-      console.log("err ", JSON.stringify(err), "rows ", JSON.stringify(rows));
       if (err) {
         console.log("Failed to get movies.  Error: ", err.message);
       } else if (!rows) {
@@ -185,8 +205,6 @@ async function getMovies() {
       } else {
         movies = rows.map((movie) => movie.title);
       }
-
-      console.log("after each ", JSON.stringify(movies));
 
       if (movies.length > 0) {
         resolve(movies);
@@ -218,4 +236,75 @@ async function removeMovie(movieToRemove) {
       }
     );
   });
+}
+
+async function watched(movieTitle) {
+  return new Promise(async (resolve, reject) => {
+    if (!movieTitle || movieTitle.trim() === "") {
+      const watchedMovies = await getWatchedMovies();
+      const formatted = watchedMovies.join("\n");
+      if (formatted === '') {
+        resolve(`No movies in the watched movies list.`);
+      }
+      resolve(formatted);
+    } else {
+      const movies = await getMovies();
+      const exists = movies.some(
+        (movie) => movie.toLowerCase() === movieTitle.toLowerCase()
+      );
+
+      if (exists) {
+        const removed = await removeMovie(movieTitle);
+        await addMovieToWatched(movieTitle);
+        if (removed) {
+          resolve(
+            `${movieTitle} was added to watched list and removed from movies list.`
+          );
+        }
+        resolve(`Failed to remove ${movieTitle}.`);
+      } else {
+        resolve(`${movieTitle} is not in the movie list.`);
+      }
+    }
+  });
+}
+
+async function addMovieToWatched(movieTitle) {
+  return new Promise(async (resolve, reject) => {
+    db.run(
+      "insert into watchedmovies(title) values(?)",
+      [movieTitle],
+      (err) => {
+        if (err) {
+          console.log(
+            `Failed to add movie to watched list.  Error: ${err.message}`
+          );
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      }
+    );
+  });
+}
+
+async function getWatchedMovies() {
+  return new Promise((resolve, reject) => {
+    db.all("select * from watchedmovies", (err, rows) => {
+      const titles = rows.map((row) => row.title);
+      if (err) {
+        console.log(`Failed to get watched movies.  Error: ${err.message}`);
+        resolve(err.message);
+      } else {
+        resolve(titles);
+      }
+    });
+  });
+}
+
+function getFormattedMovieTitle(title) {
+  return title
+    .split(" ")
+    .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+    .join(" ");
 }
