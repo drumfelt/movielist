@@ -26,14 +26,6 @@ const dbExists = fs.existsSync(moviesDbFile);
 const sqlite = sqlite3.verbose();
 const db = new sqlite.Database(moviesDbFile);
 
-db.serialize(() => {
-  if (dbExists) {
-    db.each("select * from movies", (err, row) => {
-      // console.log(JSON.stringify(row));
-    });
-  }
-});
-
 // Parse request body and verifies incoming requests using discord-interactions package
 app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }));
 
