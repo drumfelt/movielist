@@ -38,7 +38,6 @@ const activeGames = {};
 app.post("/interactions", async function (req, res) {
   // Interaction type and data
   const { type, id, data } = req.body;
-  // console.log(JSON.stringify(data));
 
   /**
    * Handle verification requests
@@ -147,6 +146,31 @@ app.post("/interactions", async function (req, res) {
       }
       const formatted = getFormattedMovieTitle(movieAdded);
       const response = await watched(formatted);
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: response,
+        },
+      });
+    } else if (name === 'pick') {
+      const movies = await getMovies();
+      let response = '';
+      if (movies && movies.length > 0) {
+        if (movies.length === 1) {
+          response = movies[0];
+        } else {
+          const upper = movies.length;
+          const random = Math.floor(Math.random() * upper);
+          if (random > movies.length) {
+            response = movies[0];
+          } else {
+            response = movies[random];
+          }
+        }
+      } else {
+        response = 'There are no movies in the movie list.';
+      }
+      
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {

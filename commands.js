@@ -72,6 +72,12 @@ const WATCHED_COMMAND = {
   type: 1
 };
 
-const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND, WATCHED_COMMAND];
+const PICK_COMMAND = {
+  name: 'pick',
+  description: 'Pick a movie from the movie list.',
+  type: 1
+}
+
+const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND, WATCHED_COMMAND, PICK_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
