@@ -76,7 +76,10 @@ app.post("/interactions", async function (req, res) {
 
     if (name === "add") {
       // Extract title from request.  Only one is given but the body is an array.
-      const movieAdded = data.options.map((option) => option.value).join();
+      const movieAdded = data.options
+        .map((option) => option.value)
+        .join()
+        .trim();
 
       // format movie title to have upper case first letters
       const formattedMovieTitle = movieAdded
@@ -102,7 +105,11 @@ app.post("/interactions", async function (req, res) {
         },
       });
     } else if (name === "list") {
-      const response = await getMoviesResponse();
+      let response = await getMoviesResponse();
+
+      if (response === "") {
+        response = "There are no movies in the movie list.";
+      }
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -111,20 +118,31 @@ app.post("/interactions", async function (req, res) {
       });
     } else if (name === "remove") {
       // Extract title from request.  Only one is given but the body is an array.
-      const movieAdded = data.options.map((option) => option.value).join();
-
-      // format movie title to have upper case first letters
-      const formattedMovieTitle = movieAdded
-        .split(" ")
-        .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-        .join(" ");
-      const movieRemoved = await removeMovie(movieAdded);
-
+      const movieAdded = data.options
+        .map((option) => option.value)
+        .join()
+        .trim();
       let response = "";
-      if (movieRemoved) {
-        response = `${formattedMovieTitle} was removed from the movie list.`;
+      const movies = await getMovies();
+      const movieExists = movies.some(
+        (movie) => movie.toLowerCase() === movieAdded.toLowerCase()
+      );
+
+      if (!movieExists) {
+        response = "This movie is not in the list.";
       } else {
-        response = `${formattedMovieTitle} was not removed from the movie list.`;
+        // format movie title to have upper case first letters
+        const formattedMovieTitle = movieAdded
+          .split(" ")
+          .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+          .join(" ");
+        const movieRemoved = await removeMovie(movieAdded);
+
+        if (movieRemoved) {
+          response = `${formattedMovieTitle} was removed from the movie list.`;
+        } else {
+          response = `${formattedMovieTitle} was not removed from the movie list.`;
+        }
       }
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -149,15 +167,15 @@ async function addMovieToList(movieAdded) {
 
     if (movieExists) {
       resolve("exists");
+    } else {
+      db.run("insert into movies (title) values (?)", [movieAdded], (err) => {
+        if (err) {
+          console.log("Failed to insert movie.  Error: ", err.message);
+        } else {
+          resolve();
+        }
+      });
     }
-
-    db.run("insert into movies (title) values (?)", [movieAdded], (err) => {
-      if (err) {
-        console.log("Failed to insert movie.  Error: ", err.message);
-      } else {
-        resolve();
-      }
-    });
   });
 }
 
