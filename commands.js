@@ -59,6 +59,19 @@ const ADD_COMMAND = {
   type: 1
 };
 
-const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND];
+const WATCHED_COMMAND = {
+  name: 'watched',
+  description: 'add a movie to the watched movie list or list all watched movies',
+  options: [
+    {
+      type: 3,
+      name: 'title',
+      description: 'add a movie to the watched movie list or list all watched movies'
+    }
+  ],
+  type: 1
+};
+
+const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND, WATCHED_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
