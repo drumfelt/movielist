@@ -74,15 +74,62 @@ app.post("/interactions", async function (req, res) {
       });
     }
 
-    if (name === "list") {
+    if (name === "add") {
+      // Extract title from request.  Only one is given but the body is an array.
       const movieAdded = data.options.map((option) => option.value).join();
-      await addMovieToList(movieAdded);
-      const hydratedMovies = await getMovies();
-      const formattedResponse = hydratedMovies.join("\n");
+
+      // format movie title to have upper case first letters
+      const formattedMovieTitle = movieAdded
+        .split(" ")
+        .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+        .join(" ");
+      const addStatus = await addMovieToList(formattedMovieTitle);
+      let response = "";
+
+      if (addStatus === "exists") {
+        response = `${formattedMovieTitle} is already in the list.`;
+      } else {
+        const hydratedMovies = await getMovies();
+
+        // Return the last movie to the user as the movie that is added.
+        const lastMovie = hydratedMovies.slice(-1);
+        response = `${lastMovie} added to the movie list.`;
+      }
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: formattedResponse
+          content: response,
+        },
+      });
+    } else if (name === "list") {
+      const response = await getMoviesResponse();
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: response,
+        },
+      });
+    } else if (name === "remove") {
+      // Extract title from request.  Only one is given but the body is an array.
+      const movieAdded = data.options.map((option) => option.value).join();
+
+      // format movie title to have upper case first letters
+      const formattedMovieTitle = movieAdded
+        .split(" ")
+        .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+        .join(" ");
+      const movieRemoved = await removeMovie(movieAdded);
+
+      let response = "";
+      if (movieRemoved) {
+        response = `${formattedMovieTitle} was removed from the movie list.`;
+      } else {
+        response = `${formattedMovieTitle} was not removed from the movie list.`;
+      }
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: response,
         },
       });
     }
@@ -94,7 +141,16 @@ app.listen(PORT, () => {
 });
 
 async function addMovieToList(movieAdded) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    const existingMovies = await getMovies();
+    const movieExists = existingMovies.some(
+      (movie) => movie.toLowerCase() === movieAdded.toLowerCase()
+    );
+
+    if (movieExists) {
+      resolve("exists");
+    }
+
     db.run("insert into movies (title) values (?)", [movieAdded], (err) => {
       if (err) {
         console.log("Failed to insert movie.  Error: ", err.message);
@@ -103,6 +159,16 @@ async function addMovieToList(movieAdded) {
       }
     });
   });
+}
+
+async function getMoviesResponse() {
+  let formattedResponse = "";
+  const hydratedMovies = await getMovies();
+  if (!hydratedMovies || hydratedMovies.length === 0) {
+    formattedResponse = "No movies in the list.";
+  }
+  formattedResponse = hydratedMovies.join("\n");
+  return formattedResponse;
 }
 
 async function getMovies() {
@@ -115,6 +181,7 @@ async function getMovies() {
         console.log("Failed to get movies.  Error: ", err.message);
       } else if (!rows) {
         console.log("Response from database is null or undefined.");
+        resolve([]);
       } else {
         movies = rows.map((movie) => movie.title);
       }
@@ -125,7 +192,30 @@ async function getMovies() {
         resolve(movies);
       } else {
         console.log("No movies found.");
+        resolve([]);
       }
     });
+  });
+}
+
+async function removeMovie(movieToRemove) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      "delete from movies where lower(title) = ?",
+      [movieToRemove.toLowerCase()],
+      (err) => {
+        if (err) {
+          console.log(
+            "Failed to delete movie " +
+              movieToRemove +
+              ". Error: " +
+              err.message
+          );
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      }
+    );
   });
 }

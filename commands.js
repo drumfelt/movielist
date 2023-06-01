@@ -25,36 +25,40 @@ const TEST_COMMAND = {
 };
 
 // Command containing options
-const CHALLENGE_COMMAND = {
-  name: 'challenge',
-  description: 'Challenge to a match of rock paper scissors',
-  options: [
-    {
-      type: 3,
-      name: 'object',
-      description: 'Pick your object',
-      required: true,
-      choices: createCommandChoices(),
-    },
-  ],
-  type: 1,
-};
-
-// Command containing options
 const LIST_COMMAND = {
   name: 'list',
   description: 'Display all movies in the movie list.',
+  type: 1
+};
+
+const REMOVE_COMMAND = {
+  name: 'remove',
+  description: 'Remove a movie from the movie list.',
   type: 1,
-  options: [
+   options: [
     {
       type: 3,
-      name: 'movie title',
-      description: 'add a movie to the list',
+      name: 'title',
+      description: 'remove a movie from the movie list',
       required: true
     }
   ]
 };
 
-const ALL_COMMANDS = [TEST_COMMAND, CHALLENGE_COMMAND, LIST_COMMAND];
+const ADD_COMMAND = {
+  name: 'add',
+  description: 'add a movie to the movie list',
+  options: [
+    {
+      type: 3,
+      name: 'title',
+      description: 'add a movie to the movie list',
+      required: true
+    }
+  ],
+  type: 1
+};
+
+const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
