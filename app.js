@@ -12,7 +12,6 @@ import {
   getRandomEmoji,
   DiscordRequest,
 } from "./utils.js";
-import { getShuffledOptions, getResult } from "./game.js";
 import sqlite3 from "sqlite3";
 import fs from "fs";
 
@@ -152,29 +151,61 @@ app.post("/interactions", async function (req, res) {
           content: response,
         },
       });
-    } else if (name === 'pick') {
+    } else if (name === "pick") {
       const movies = await getMovies();
-      let response = '';
+      let response = "";
       if (movies && movies.length > 0) {
         if (movies.length === 1) {
           response = movies[0];
         } else {
           const upper = movies.length;
           const random = Math.floor(Math.random() * upper);
-          if (random > movies.length) {
+          if (random > movies.length - 1) {
             response = movies[0];
           } else {
             response = movies[random];
           }
         }
       } else {
-        response = 'There are no movies in the movie list.';
+        response = "There are no movies in the movie list.";
       }
-      
+
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           content: response,
+        },
+      });
+    } else if (name === "unwatch") {
+      const watchedMovies = await getWatchedMovies();
+      let response = "";
+      if (watchedMovies && watchedMovies.length > 0) {
+        // Extract title from request.  Only one is given but the body is an array.
+        const title = data.options
+          .map((option) => option.value)
+          .join()
+          .trim();
+        const formattedTitle = getFormattedMovieTitle(title);
+        
+        response = await new Promise(async (resolve, reject) => {
+          db.run('delete from watchedmovies where lower(title) = ?;', [title.toLowerCase()], (err) => {
+            if (err) {
+              console.log(`Failed to delete ${formattedTitle} from watched movie list.  Error: ${err.message}`);
+              resolve(`Failed to delete ${formattedTitle} from watched movie list.`);
+            } else {
+              resolve(`${formattedTitle} was removed from the watched list.`);
+            }
+          });
+        });
+        
+      } else {
+        response = "There are no movies in the watched movie list.";
+      }
+
+      return res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: response
         },
       });
     }
@@ -267,7 +298,7 @@ async function watched(movieTitle) {
     if (!movieTitle || movieTitle.trim() === "") {
       const watchedMovies = await getWatchedMovies();
       const formatted = watchedMovies.join("\n");
-      if (formatted === '') {
+      if (formatted === "") {
         resolve(`No movies in the watched movies list.`);
       }
       resolve(formatted);

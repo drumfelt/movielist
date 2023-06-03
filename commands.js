@@ -1,21 +1,5 @@
 import 'dotenv/config';
-import { getRPSChoices } from './game.js';
 import { capitalize, InstallGlobalCommands } from './utils.js';
-
-// Get the game choices from game.js
-function createCommandChoices() {
-  const choices = getRPSChoices();
-  const commandChoices = [];
-
-  for (let choice of choices) {
-    commandChoices.push({
-      name: capitalize(choice),
-      value: choice.toLowerCase(),
-    });
-  }
-
-  return commandChoices;
-}
 
 // Simple test command
 const TEST_COMMAND = {
@@ -72,12 +56,26 @@ const WATCHED_COMMAND = {
   type: 1
 };
 
+const UNWATCH_COMMAND = {
+  name: 'unwatch',
+  description: 'unwatch a movie',
+  options: [
+    {
+      type: 3,
+      name: 'title',
+      description: 'unwatch a movie',
+      required: true
+    }
+  ],
+  type: 1
+};
+
 const PICK_COMMAND = {
   name: 'pick',
   description: 'Pick a movie from the movie list.',
   type: 1
 }
 
-const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND, WATCHED_COMMAND, PICK_COMMAND];
+const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND, WATCHED_COMMAND, PICK_COMMAND, UNWATCH_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
