@@ -1,80 +1,90 @@
-import 'dotenv/config';
-import { capitalize, InstallGlobalCommands } from './utils.js';
+import "dotenv/config";
+import { installGlobalCommands } from "./utils.js";
 
 // Simple test command
 const testCommand = {
-  name: 'test',
-  description: 'Basic command',
+  name: "test",
+  description: "Basic command",
   type: 1,
 };
 
 const listCommand = {
-  name: 'list',
-  description: 'Display all movies in the movie list.',
-  type: 1
+  name: "list",
+  description: "Display all movies in the movie list.",
+  type: 1,
 };
 
 const removeCommand = {
-  name: 'remove',
-  description: 'Remove a movie from the movie list.',
+  name: "remove",
+  description: "Remove a movie from the movie list.",
   type: 1,
-   options: [
+  options: [
     {
       type: 3,
-      name: 'title',
-      description: 'remove a movie from the movie list',
-      required: true
-    }
-  ]
+      name: "title",
+      description: "remove a movie from the movie list",
+      required: true,
+    },
+  ],
 };
 
 const addCommand = {
-  name: 'add',
-  description: 'add a movie to the movie list',
+  name: "add",
+  description: "add a movie to the movie list",
   options: [
     {
       type: 3,
-      name: 'title',
-      description: 'add a movie to the movie list',
-      required: true
-    }
+      name: "title",
+      description: "add a movie to the movie list",
+      required: true,
+    },
   ],
-  type: 1
+  type: 1,
 };
 
 const watchedCommand = {
-  name: 'watched',
-  description: 'add a movie to the watched movie list or list all watched movies',
+  name: "watched",
+  description:
+    "add a movie to the watched movie list or list all watched movies",
   options: [
     {
       type: 3,
-      name: 'title',
-      description: 'add a movie to the watched movie list or list all watched movies'
-    }
+      name: "title",
+      description:
+        "add a movie to the watched movie list or list all watched movies",
+    },
   ],
-  type: 1
+  type: 1,
 };
 
 const unwatchCommand = {
-  name: 'unwatch',
-  description: 'unwatch a movie',
+  name: "unwatch",
+  description: "unwatch a movie",
   options: [
     {
       type: 3,
-      name: 'title',
-      description: 'unwatch a movie',
-      required: true
-    }
+      name: "title",
+      description: "unwatch a movie",
+      required: true,
+    },
   ],
-  type: 1
+  type: 1,
 };
 
 const pickCommand = {
-  name: 'pick',
-  description: 'Pick a movie from the movie list.',
-  type: 1
-}
+  name: "pick",
+  description: "Pick a movie from the movie list.",
+  type: 1,
+};
 
-const allCommands = [addCommand, listCommand, removeCommand, testCommand, watchedCommand, pickCommand, unwatchCommand];
+const allCommands = [
+  addCommand,
+  listCommand,
+  removeCommand,
+  testCommand,
+  watchedCommand,
+  pickCommand,
+  unwatchCommand,
+];
 
-InstallGlobalCommands(process.env.APP_ID, allCommands);
+installGlobalCommands(process.env.APP_ID, allCommands);
