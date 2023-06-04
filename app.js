@@ -1,27 +1,26 @@
-import "dotenv/config";
-import express from "express";
+import 'dotenv/config';
+import express from 'express';
 import {
   InteractionType,
   InteractionResponseType,
   InteractionResponseFlags,
   MessageComponentTypes,
   ButtonStyleTypes,
-} from "discord-interactions";
+} from 'discord-interactions';
 import {
   VerifyDiscordRequest,
   getRandomEmoji,
   DiscordRequest,
-} from "./utils.js";
-import sqlite3 from "sqlite3";
-import fs from "fs";
+} from './utils.js';
+import sqlite3 from 'sqlite3';
+import fs from 'fs';
 
 // Create an express app
 const app = express();
 // Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
 
-const moviesDbFile = "./.data/movies";
-const dbExists = fs.existsSync(moviesDbFile);
+const moviesDbFile = './.data/movies';
 const sqlite = sqlite3.verbose();
 const db = new sqlite.Database(moviesDbFile);
 
@@ -34,7 +33,7 @@ const activeGames = {};
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
  */
-app.post("/interactions", async function (req, res) {
+app.post('/interactions', async function (req, res) {
   // Interaction type and data
   const { type, id, data } = req.body;
 
@@ -52,31 +51,28 @@ app.post("/interactions", async function (req, res) {
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
 
-    // "test" command
-    if (name === "test") {
+    // 'test' command
+    if (name === 'test') {
       // Send a message into the channel where command was triggered from
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           // Fetches a random emoji to send from a helper function
-          content: "hello world " + getRandomEmoji(),
+          content: 'hello world ' + getRandomEmoji(),
         },
       });
     }
 
-    if (name === "add") {
+    if (name === 'add') {
       // Extract title from request.  Only one is given but the body is an array.
-      const movieAdded = data.options
-        .map((option) => option.value)
-        .join()
-        .trim();
+      const movieAdded = getTitleFromRequest(data);
 
       // format movie title to have upper case first letters
       const formattedMovieTitle = getFormattedMovieTitle(movieAdded);
       const addStatus = await addMovieToList(formattedMovieTitle);
-      let response = "";
+      let response = '';
 
-      if (addStatus === "exists") {
+      if (addStatus === 'exists') {
         response = `${formattedMovieTitle} is already in the list.`;
       } else {
         const hydratedMovies = await getMovies();
@@ -91,11 +87,11 @@ app.post("/interactions", async function (req, res) {
           content: response,
         },
       });
-    } else if (name === "list") {
+    } else if (name === 'list') {
       let response = await getMoviesResponse();
 
-      if (response === "") {
-        response = "There are no movies in the movie list.";
+      if (response === '') {
+        response = 'There are no movies in the movie list.';
       }
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -103,20 +99,17 @@ app.post("/interactions", async function (req, res) {
           content: response,
         },
       });
-    } else if (name === "remove") {
+    } else if (name === 'remove') {
       // Extract title from request.  Only one is given but the body is an array.
-      const movieAdded = data.options
-        .map((option) => option.value)
-        .join()
-        .trim();
-      let response = "";
+      const movieAdded = getTitleFromRequest(data);
+      let response = '';
       const movies = await getMovies();
       const movieExists = movies.some(
         (movie) => movie.toLowerCase() === movieAdded.toLowerCase()
       );
 
       if (!movieExists) {
-        response = "This movie is not in the list.";
+        response = 'This movie is not in the list.';
       } else {
         // format movie title to have upper case first letters
         const formattedMovieTitle = getFormattedMovieTitle(movieAdded);
@@ -134,14 +127,11 @@ app.post("/interactions", async function (req, res) {
           content: response,
         },
       });
-    } else if (name === "watched") {
+    } else if (name === 'watched') {
       // Extract title from request.  Only one is given but the body is an array.
-      let movieAdded = "";
+      let movieAdded = '';
       if (data.options && data.options.length > 0) {
-        movieAdded = data.options
-          .map((option) => option.value)
-          .join()
-          .trim();
+        movieAdded = getTitleFromRequest(data);
       }
       const formatted = getFormattedMovieTitle(movieAdded);
       const response = await watched(formatted);
@@ -151,9 +141,9 @@ app.post("/interactions", async function (req, res) {
           content: response,
         },
       });
-    } else if (name === "pick") {
+    } else if (name === 'pick') {
       const movies = await getMovies();
-      let response = "";
+      let response = '';
       if (movies && movies.length > 0) {
         if (movies.length === 1) {
           response = movies[0];
@@ -167,7 +157,7 @@ app.post("/interactions", async function (req, res) {
           }
         }
       } else {
-        response = "There are no movies in the movie list.";
+        response = 'There are no movies in the movie list.';
       }
 
       return res.send({
@@ -176,17 +166,14 @@ app.post("/interactions", async function (req, res) {
           content: response,
         },
       });
-    } else if (name === "unwatch") {
+    } else if (name === 'unwatch') {
       const watchedMovies = await getWatchedMovies();
-      let response = "";
+      let response = '';
       if (watchedMovies && watchedMovies.length > 0) {
         // Extract title from request.  Only one is given but the body is an array.
-        const title = data.options
-          .map((option) => option.value)
-          .join()
-          .trim();
+        const title = getTitleFromRequest(data);
         const formattedTitle = getFormattedMovieTitle(title);
-        
+
         response = await new Promise(async (resolve, reject) => {
           db.run('delete from watchedmovies where lower(title) = ?;', [title.toLowerCase()], (err) => {
             if (err) {
@@ -197,9 +184,9 @@ app.post("/interactions", async function (req, res) {
             }
           });
         });
-        
+
       } else {
-        response = "There are no movies in the watched movie list.";
+        response = 'There are no movies in the watched movie list.';
       }
 
       return res.send({
@@ -213,7 +200,7 @@ app.post("/interactions", async function (req, res) {
 });
 
 app.listen(PORT, () => {
-  console.log("Listening on port", PORT);
+  console.log('Listening on port', PORT);
 });
 
 async function addMovieToList(movieAdded) {
@@ -224,11 +211,11 @@ async function addMovieToList(movieAdded) {
     );
 
     if (movieExists) {
-      resolve("exists");
+      resolve('exists');
     } else {
-      db.run("insert into movies (title) values (?)", [movieAdded], (err) => {
+      db.run('insert into movies (title) values (?);', [movieAdded], (err) => {
         if (err) {
-          console.log("Failed to insert movie.  Error: ", err.message);
+          console.log('Failed to insert movie.  Error: ', err.message);
         } else {
           resolve();
         }
@@ -238,12 +225,12 @@ async function addMovieToList(movieAdded) {
 }
 
 async function getMoviesResponse() {
-  let formattedResponse = "";
+  let formattedResponse = '';
   const hydratedMovies = await getMovies();
   if (!hydratedMovies || hydratedMovies.length === 0) {
-    formattedResponse = "No movies in the list.";
+    formattedResponse = 'No movies in the list.';
   }
-  formattedResponse = hydratedMovies.join("\n");
+  formattedResponse = hydratedMovies.join('\n');
   return formattedResponse;
 }
 
@@ -251,11 +238,11 @@ async function getMovies() {
   return new Promise((resolve, reject) => {
     let movies = [];
 
-    db.all("select * from movies", (err, rows) => {
+    db.all('select * from movies;', (err, rows) => {
       if (err) {
-        console.log("Failed to get movies.  Error: ", err.message);
+        console.log('Failed to get movies.  Error: ', err.message);
       } else if (!rows) {
-        console.log("Response from database is null or undefined.");
+        console.log('Response from database is null or undefined.');
         resolve([]);
       } else {
         movies = rows.map((movie) => movie.title);
@@ -264,7 +251,7 @@ async function getMovies() {
       if (movies.length > 0) {
         resolve(movies);
       } else {
-        console.log("No movies found.");
+        console.log('No movies found.');
         resolve([]);
       }
     });
@@ -274,16 +261,11 @@ async function getMovies() {
 async function removeMovie(movieToRemove) {
   return new Promise((resolve, reject) => {
     db.run(
-      "delete from movies where lower(title) = ?",
+      'delete from movies where lower(title) = ?;',
       [movieToRemove.toLowerCase()],
       (err) => {
         if (err) {
-          console.log(
-            "Failed to delete movie " +
-              movieToRemove +
-              ". Error: " +
-              err.message
-          );
+          console.log(`Failed to delete ${movieToRemove}. Error: ${err.message}`);
           resolve(false);
         } else {
           resolve(true);
@@ -295,10 +277,10 @@ async function removeMovie(movieToRemove) {
 
 async function watched(movieTitle) {
   return new Promise(async (resolve, reject) => {
-    if (!movieTitle || movieTitle.trim() === "") {
+    if (!movieTitle || movieTitle.trim() === '') {
       const watchedMovies = await getWatchedMovies();
-      const formatted = watchedMovies.join("\n");
-      if (formatted === "") {
+      const formatted = watchedMovies.join('\n');
+      if (formatted === '') {
         resolve(`No movies in the watched movies list.`);
       }
       resolve(formatted);
@@ -327,7 +309,7 @@ async function watched(movieTitle) {
 async function addMovieToWatched(movieTitle) {
   return new Promise(async (resolve, reject) => {
     db.run(
-      "insert into watchedmovies(title) values(?)",
+      'insert into watchedmovies(title) values(?);',
       [movieTitle],
       (err) => {
         if (err) {
@@ -345,7 +327,7 @@ async function addMovieToWatched(movieTitle) {
 
 async function getWatchedMovies() {
   return new Promise((resolve, reject) => {
-    db.all("select * from watchedmovies", (err, rows) => {
+    db.all('select * from watchedmovies;', (err, rows) => {
       const titles = rows.map((row) => row.title);
       if (err) {
         console.log(`Failed to get watched movies.  Error: ${err.message}`);
@@ -359,7 +341,14 @@ async function getWatchedMovies() {
 
 function getFormattedMovieTitle(title) {
   return title
-    .split(" ")
+    .split(' ')
     .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-    .join(" ");
+    .join(' ');
+}
+
+function getTitleFromRequest(data) {
+  return data.options
+        .map((option) => option.value)
+        .join()
+        .trim();
 }
