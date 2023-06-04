@@ -6,7 +6,9 @@ import {
 } from 'discord-interactions';
 import {
   verifyDiscordRequest,
-  getRandomEmoji
+  getRandomEmoji,
+  getTitleFromRequest,
+  getFormattedMovieTitle
 } from './utils.js';
 import sqlite3 from 'sqlite3';
 
@@ -329,18 +331,4 @@ async function getWatchedMovies() {
       }
     });
   });
-}
-
-function getFormattedMovieTitle(title) {
-  return title
-    .split(' ')
-    .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
-    .join(' ');
-}
-
-function getTitleFromRequest(data) {
-  return data.options
-        .map((option) => option.value)
-        .join()
-        .trim();
 }

@@ -60,3 +60,17 @@ export function getRandomEmoji() {
 export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export function getTitleFromRequest(data) {
+  return data.options
+        .map((option) => option.value)
+        .join()
+        .trim();
+}
+
+export function getFormattedMovieTitle(title) {
+  return title
+    .split(' ')
+    .map((t) => t.charAt(0).toUpperCase() + t.slice(1))
+    .join(' ');
+}
