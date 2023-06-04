@@ -2,20 +2,19 @@ import 'dotenv/config';
 import { capitalize, InstallGlobalCommands } from './utils.js';
 
 // Simple test command
-const TEST_COMMAND = {
+const testCommand = {
   name: 'test',
   description: 'Basic command',
   type: 1,
 };
 
-// Command containing options
-const LIST_COMMAND = {
+const listCommand = {
   name: 'list',
   description: 'Display all movies in the movie list.',
   type: 1
 };
 
-const REMOVE_COMMAND = {
+const removeCommand = {
   name: 'remove',
   description: 'Remove a movie from the movie list.',
   type: 1,
@@ -29,7 +28,7 @@ const REMOVE_COMMAND = {
   ]
 };
 
-const ADD_COMMAND = {
+const addCommand = {
   name: 'add',
   description: 'add a movie to the movie list',
   options: [
@@ -43,7 +42,7 @@ const ADD_COMMAND = {
   type: 1
 };
 
-const WATCHED_COMMAND = {
+const watchedCommand = {
   name: 'watched',
   description: 'add a movie to the watched movie list or list all watched movies',
   options: [
@@ -56,7 +55,7 @@ const WATCHED_COMMAND = {
   type: 1
 };
 
-const UNWATCH_COMMAND = {
+const unwatchCommand = {
   name: 'unwatch',
   description: 'unwatch a movie',
   options: [
@@ -70,12 +69,12 @@ const UNWATCH_COMMAND = {
   type: 1
 };
 
-const PICK_COMMAND = {
+const pickCommand = {
   name: 'pick',
   description: 'Pick a movie from the movie list.',
   type: 1
 }
 
-const ALL_COMMANDS = [ADD_COMMAND, LIST_COMMAND, REMOVE_COMMAND, TEST_COMMAND, WATCHED_COMMAND, PICK_COMMAND, UNWATCH_COMMAND];
+const allCommands = [addCommand, listCommand, removeCommand, testCommand, watchedCommand, pickCommand, unwatchCommand];
 
-InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
+InstallGlobalCommands(process.env.APP_ID, allCommands);
