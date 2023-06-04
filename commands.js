@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { capitalize, InstallGlobalCommands } from './utils.js';
+import { capitalize, installGlobalCommands } from './utils.js';
 
 // Simple test command
 const testCommand = {
@@ -73,8 +73,8 @@ const pickCommand = {
   name: 'pick',
   description: 'Pick a movie from the movie list.',
   type: 1
-}
+};
 
 const allCommands = [addCommand, listCommand, removeCommand, testCommand, watchedCommand, pickCommand, unwatchCommand];
 
-InstallGlobalCommands(process.env.APP_ID, allCommands);
+installGlobalCommands(process.env.APP_ID, allCommands);

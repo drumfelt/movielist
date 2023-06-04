@@ -2,7 +2,7 @@ import 'dotenv/config';
 import fetch from 'node-fetch';
 import { verifyKey } from 'discord-interactions';
 
-export function VerifyDiscordRequest(clientKey) {
+export function verifyDiscordRequest(clientKey) {
   return function (req, res, buf, encoding) {
     const signature = req.get('X-Signature-Ed25519');
     const timestamp = req.get('X-Signature-Timestamp');
@@ -15,7 +15,7 @@ export function VerifyDiscordRequest(clientKey) {
   };
 }
 
-export async function DiscordRequest(endpoint, options) {
+export async function discordRequest(endpoint, options) {
   // append endpoint to root API URL
   const url = 'https://discord.com/api/v10/' + endpoint;
   // Stringify payloads
@@ -39,13 +39,13 @@ export async function DiscordRequest(endpoint, options) {
   return res;
 }
 
-export async function InstallGlobalCommands(appId, commands) {
+export async function installGlobalCommands(appId, commands) {
   // API endpoint to overwrite global commands
   const endpoint = `applications/${appId}/commands`;
 
   try {
     // This is calling the bulk overwrite endpoint: https://discord.com/developers/docs/interactions/application-commands#bulk-overwrite-global-application-commands
-    await DiscordRequest(endpoint, { method: 'PUT', body: commands });
+    await discordRequest(endpoint, { method: 'PUT', body: commands });
   } catch (err) {
     console.error(err);
   }

@@ -5,7 +5,7 @@ import {
   InteractionResponseType
 } from 'discord-interactions';
 import {
-  VerifyDiscordRequest,
+  verifyDiscordRequest,
   getRandomEmoji
 } from './utils.js';
 import sqlite3 from 'sqlite3';
@@ -20,7 +20,7 @@ const sqlite = sqlite3.verbose();
 const db = new sqlite.Database(moviesDbFile);
 
 // Parse request body and verifies incoming requests using discord-interactions package
-app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }));
+app.use(express.json({ verify: verifyDiscordRequest(process.env.PUBLIC_KEY) }));
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
