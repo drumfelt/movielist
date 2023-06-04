@@ -24,7 +24,7 @@ app.use(express.json({ verify: verifyDiscordRequest(process.env.PUBLIC_KEY) }));
 app.post('/interactions', async function (req, res) {
   // Interaction type and data
   const { type, data } = req.body;
-  let resp = '';
+  let responseContent = '';
   
   /**
    * Handle verification requests
@@ -53,24 +53,28 @@ app.post('/interactions', async function (req, res) {
     }
 
     if (name === 'add') {
-      resp = await addMovie(data);
+      responseContent = await addMovie(data);
     } else if (name === 'list') {
-      resp = await list(data);
+      responseContent = await list(data);
     } else if (name === 'remove') {
-      resp = await remove(data);
+      responseContent = await remove(data);
     } else if (name === 'watched') {
-      resp = await watched(data);
+      responseContent = await watched(data);
     } else if (name === 'pick') {
-      resp = await pick();
+      responseContent = await pick();
     } else if (name === 'unwatch') {
-      resp = await unwatch(data);
+      responseContent = await unwatch(data);
+    } else {
+      responseContent = `Command unsupported`;
     }
+  } else {
+    responseContent = `This request was not of type InteractionType.APPLICATION_COMMAND and is unsupported.`;
   }
 
   return res.send({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: resp
+      content: responseContent
     }
   });
 });
