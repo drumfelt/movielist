@@ -205,7 +205,6 @@ export async function remove(data) {
     if (!movieExists) {
         response = 'This movie is not in the list.';
     } else {
-        // format movie title to have upper case first letters
         const formattedMovieTitle = getFormattedMovieTitle(movieAdded);
         const movieRemoved = await removeMovie(movieAdded);
 
@@ -222,7 +221,6 @@ export async function remove(data) {
 export async function addMovie(data) {
     const movieAdded = getTitleFromRequest(data);
 
-    // format movie title to have upper case first letters
     const formattedMovieTitle = getFormattedMovieTitle(movieAdded);
     const addStatus = await addMovieToList(formattedMovieTitle);
     let response = '';
