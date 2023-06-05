@@ -30,11 +30,12 @@ export async function addMovieToList(movieAdded) {
 
 export async function list() {
     let formattedResponse = '';
-    const hydratedMovies = await getMovies();
-    if (!hydratedMovies || hydratedMovies.length === 0) {
+    const moviesFromDb = await getMovies();
+    if (moviesFromDb && moviesFromDb.length > 0) {
+        formattedResponse = moviesFromDb.join('\n');
+    } else {
         formattedResponse = 'No movies in the list.';
     }
-    formattedResponse = hydratedMovies.join('\n');
     return formattedResponse;
 }
 
@@ -230,10 +231,10 @@ export async function addMovie(data) {
     } else if (addStatus === 'failed') {
         response = `Failed to add ${formattedMovieTitle} to the movie list.`;
     } else {
-        const hydratedMovies = await getMovies();
+        const moviesFromDb = await getMovies();
 
         // Return the last movie to the user as the movie that is added.
-        const lastMovie = hydratedMovies.slice(-1);
+        const lastMovie = moviesFromDb.slice(-1);
         response = `${lastMovie} added to the movie list.`;
     }
 
