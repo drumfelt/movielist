@@ -75,6 +75,21 @@ const pickCommand = {
   type: 1
 };
 
-const allCommands = [addCommand, listCommand, removeCommand, testCommand, watchedCommand, pickCommand, unwatchCommand];
+const infoCommand = {
+  name: 'info',
+  description: 'Get basic movie information.',
+  options: [
+    {
+      type: 3,
+      name: 'title',
+      description: 'get movie information',
+      required: true
+    }
+  ],
+  type: 1
+};
+
+
+const allCommands = [addCommand, listCommand, removeCommand, testCommand, watchedCommand, pickCommand, unwatchCommand, infoCommand];
 
 installGlobalCommands(process.env.APP_ID, allCommands);

@@ -64,6 +64,8 @@ app.post('/interactions', async function (req, res) {
       responseContent = await pick();
     } else if (name === 'unwatch') {
       responseContent = await unwatch(data);
+    } else if (name === 'info') {
+      responseContent = 'movie info placeholder';
     } else {
       responseContent = `Command unsupported`;
     }
