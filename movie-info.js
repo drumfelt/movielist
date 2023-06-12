@@ -24,8 +24,8 @@ export async function getMovieInfoByTitle(data) {
                 resolve();
             }
 
-            console.log(json.stringify(response));
-            console.log(json.stringify(movie));
+            console.log(JSON.stringify(response));
+            console.log(JSON.stringify(movie));
             resolve('');
         });
     });
