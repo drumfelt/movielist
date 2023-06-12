@@ -9,6 +9,7 @@ import {
   getRandomEmoji
 } from './utils.js';
 import { watched, list, unwatch, pick, addMovie, remove } from './interactions.js';
+import { getMovieInfoByTitle } from './movie-info.js';
 
 // Create an express app
 const app = express();
@@ -65,7 +66,7 @@ app.post('/interactions', async function (req, res) {
     } else if (name === 'unwatch') {
       responseContent = await unwatch(data);
     } else if (name === 'info') {
-      responseContent = 'movie info placeholder';
+      responseContent = getMovieInfoByTitle(data);
     } else {
       responseContent = `Command unsupported`;
     }
