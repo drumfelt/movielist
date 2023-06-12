@@ -66,7 +66,7 @@ app.post('/interactions', async function (req, res) {
     } else if (name === 'unwatch') {
       responseContent = await unwatch(data);
     } else if (name === 'info') {
-      responseContent = getMovieInfoByTitle(data);
+      responseContent = await getMovieInfoByTitle(data);
     } else {
       responseContent = `Command unsupported`;
     }
