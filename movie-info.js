@@ -24,9 +24,17 @@ export async function getMovieInfoByTitle(data) {
                 resolve();
             }
 
-            console.log(JSON.stringify(response));
-            console.log(JSON.stringify(movie));
-            resolve(JSON.stringify(movie));
+            const formattedResponse = `
+            > **Title**: ${movie.Title}
+            > **Year:** ${movie.Year}
+            > **Rated:** ${movie.Rated}
+            > **Length:** ${movie.Runtime}
+            > **Director:** ${movie.Director}
+            > **Actors:** ${movie.Actors}
+            > **Plot:** ${movie.Plot}
+            > **More info:** https://www.imdb.com/title/${movie.imdbID}/`;
+
+            resolve(formattedResponse);
         });
     });
 }
