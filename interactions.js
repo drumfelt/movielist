@@ -234,7 +234,7 @@ export async function addMovie(data) {
         const moviesFromDb = await getMovies();
 
         // Return the last movie to the user as the movie that is added.
-        const lastMovie = moviesFromDb.slice(-1);
+        const lastMovie = moviesFromDb.pop();
         response = `${lastMovie} added to the movie list.`;
     }
 
