@@ -32,7 +32,7 @@ export async function getMovieInfoByTitle(data) {
             > **Director:** ${movie.Director}
             > **Actors:** ${movie.Actors}
             > **Plot:** ${movie.Plot}
-            > **More info:** https://www.imdb.com/title/${movie.imdbID}/`;
+            > **More info:** <https://www.imdb.com/title/${movie.imdbID}/>`;
 
             resolve(formattedResponse);
         });
